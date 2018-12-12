@@ -11,7 +11,7 @@ int Nr=10;
 int Nb=4;
 //rcon hardcoded values
 uint8_t rcon[10]={0x1,0x2,0x4,0x8,0x10,0x20,0x40,0x80,0x1b,0x36};
-//sbox
+//s-box
 int sbox[256] =
  {0x63 ,0x7c ,0x77 ,0x7b ,0xf2 ,0x6b ,0x6f ,0xc5 ,0x30 ,0x01 ,0x67 ,0x2b ,0xfe ,0xd7 ,0xab ,0x76
  ,0xca ,0x82 ,0xc9 ,0x7d ,0xfa ,0x59 ,0x47 ,0xf0 ,0xad ,0xd4 ,0xa2 ,0xaf ,0x9c ,0xa4 ,0x72 ,0xc0
@@ -29,7 +29,7 @@ int sbox[256] =
  ,0x70 ,0x3e ,0xb5 ,0x66 ,0x48 ,0x03 ,0xf6 ,0x0e ,0x61 ,0x35 ,0x57 ,0xb9 ,0x86 ,0xc1 ,0x1d ,0x9e
  ,0xe1 ,0xf8 ,0x98 ,0x11 ,0x69 ,0xd9 ,0x8e ,0x94 ,0x9b ,0x1e ,0x87 ,0xe9 ,0xce ,0x55 ,0x28 ,0xdf
  ,0x8c ,0xa1 ,0x89 ,0x0d ,0xbf ,0xe6 ,0x42 ,0x68 ,0x41 ,0x99 ,0x2d ,0x0f ,0xb0 ,0x54 ,0xbb ,0x16};
-//inverse sbox
+//inverse s-box
 int inv_sbox[256] =
  {0x52 ,0x09 ,0x6a ,0xd5 ,0x30 ,0x36 ,0xa5 ,0x38 ,0xbf ,0x40 ,0xa3 ,0x9e ,0x81 ,0xf3 ,0xd7 ,0xfb
  ,0x7c ,0xe3 ,0x39 ,0x82 ,0x9b ,0x2f ,0xff ,0x87 ,0x34 ,0x8e ,0x43 ,0x44 ,0xc4 ,0xde ,0xe9 ,0xcb
@@ -62,7 +62,7 @@ void RotWord(uint8_t word[4]){
 }
 
 /*
- * Applies the sbox to a word.
+ * Applies the s-box to a word.
  * @param word: A word.
  */
 void SubWord(uint8_t word[4]){
@@ -72,11 +72,11 @@ void SubWord(uint8_t word[4]){
 }
 
 /*
- * Applies the sbox to the state matrix.
+ * Applies the s-box to the state matrix.
  * @param state: The state matrix.
  */
-void SubBytes(uint8_t state[4][4]){
-  for(int i=0;i<4;i++){
+void SubBytes(uint8_t state[Nb][4]){
+  for(int i=0;i<Nb;i++){
     for(int j=0;j<4;j++){
       state[i][j]=sbox[state[i][j]];
     }
@@ -84,11 +84,11 @@ void SubBytes(uint8_t state[4][4]){
 }
 
 /*
- * Applies the inverse sbox to the state matrix.
+ * Applies the inverse s-box to the state matrix.
  * @param state: The state matrix.
  */
-void InvSubBytes(uint8_t state[4][4]){
-  for(int i=0;i<4;i++){
+void InvSubBytes(uint8_t state[Nb][4]){
+  for(int i=0;i<Nb;i++){
     for(int j=0;j<4;j++){
       state[i][j]=inv_sbox[state[i][j]];
     }
@@ -99,11 +99,11 @@ void InvSubBytes(uint8_t state[4][4]){
  * Shift rows process.
  * @param state: The state to shift.
  */
-void ShiftRows(uint8_t state[4][4]){
-	uint8_t tmp[4][4];
-	memcpy(tmp,state,4*4);
+void ShiftRows(uint8_t state[Nb][4]){
+	uint8_t tmp[Nb][4];
+	memcpy(tmp,state,Nb*4);
 	for(int j=1;j<4;j++){
-		for(int i=0;i<4;i++){
+		for(int i=0;i<Nb;i++){
 			state[i][j]=tmp[(i+j)%4][j];
 		}
 	}
@@ -113,16 +113,21 @@ void ShiftRows(uint8_t state[4][4]){
  * Shift rows inverse process.
  * @param state: The state to shift.
  */
-void InvShiftRows(uint8_t state[4][4]){
-	uint8_t tmp[4][4];
-	memcpy(tmp,state,4*4);
+void InvShiftRows(uint8_t state[Nb][4]){
+	uint8_t tmp[Nb][4];
+	memcpy(tmp,state,Nb*4);
 	for(int j=1;j<4;j++){
-		for(int i=0;i<4;i++){
+		for(int i=0;i<Nb;i++){
 			state[(i+j)%4][j]=tmp[i][j];
 		}
 	}
 }
 
+/*
+ * Galois field product.
+ * @param a: value1.
+ * @param b: value2.
+ */
 uint8_t GaloisMul(uint8_t a, uint8_t b) {
 	uint8_t p = 0;
 	uint8_t counter;
@@ -139,9 +144,13 @@ uint8_t GaloisMul(uint8_t a, uint8_t b) {
 	return p;
 }
 
-void MixColumns(uint8_t state[4][4]){
+/*
+ * Mix columns process.
+ * @param state: The state.
+ */
+void MixColumns(uint8_t state[Nb][4]){
 	uint8_t temp[4][4]={0};
-	memcpy(temp,state,4*4);
+	memcpy(temp,state,Nb*4);
 	for(int i=0;i<4;i++){
 		state[i][0]=GaloisMul(temp[i][0],2)^GaloisMul(temp[i][3],1)^GaloisMul(temp[i][2],1)^GaloisMul(temp[i][1],3);
 		state[i][1]=GaloisMul(temp[i][1],2)^GaloisMul(temp[i][0],1)^GaloisMul(temp[i][3],1)^GaloisMul(temp[i][2],3);
@@ -149,8 +158,11 @@ void MixColumns(uint8_t state[4][4]){
 		state[i][3]=GaloisMul(temp[i][3],2)^GaloisMul(temp[i][2],1)^GaloisMul(temp[i][1],1)^GaloisMul(temp[i][0],3);
 	}
 }
-
-void InvMixColumns(uint8_t state[4][4]){
+/*
+ * Mix columns inverse process.
+ * @param state: The state.
+ */
+void InvMixColumns(uint8_t state[Nb][4]){
 	uint8_t temp[4][4]={0};
 	memcpy(temp,state,4*4);
 	for(int i=0;i<4;i++){
@@ -167,18 +179,23 @@ void InvMixColumns(uint8_t state[4][4]){
  * @param expanded: The state applied with the subkey.
  * @rework: adapt to different keys.
  */
-void AddRoundKey(uint8_t state[4][4],uint8_t expanded[(Nr+1)*4][4],int i1){
-	for(int i=0;i<4;i++){
+void AddRoundKey(uint8_t state[Nb][4],uint8_t expanded[(Nr+1)*Nb][4],int i1){
+	for(int i=0;i<Nb;i++){
     for(int j=0;j<4;j++){
 			state[i][j]^=expanded[i1+i][j];
 		}
   }
 }
 
-void KeyExpansion(uint8_t key[Nk][4], uint8_t expanded[(Nr+1)*4][4], uint8_t Nk){
+/*
+ * Generate the subkeys for all the rounds.
+ * @param expanded: The matrix for all the subkeys.
+ * @param Nk: Number of words of the key.
+ */
+void KeyExpansion(uint8_t key[Nk][4], uint8_t expanded[(Nr+1)*Nb][4], uint8_t Nk){
   uint8_t temp[4]={0};
   memcpy(expanded,key,Nk*4);
-  for(int i=Nk;i<4*(Nr+1);i++){
+  for(int i=Nk;i<Nb*(Nr+1);i++){
     memcpy(temp,expanded[i-1],4);
     if(i%Nk==0){
       RotWord(temp);
@@ -215,10 +232,11 @@ void KeyExpansion(uint8_t key[Nk][4], uint8_t expanded[(Nr+1)*4][4], uint8_t Nk)
 
 /*
  * Print a State matrix like.
- * @param words: Array of 4 words.
+ * @param state: State matrix like to print.
  */
-void PrintState(uint8_t state[4][4]){
-	for(int i=0;i<4;i++){
+void PrintState(uint8_t state[Nb][4],char *msg){
+	printf("%s\n",msg);
+	for(int i=0;i<Nb;i++){
 		for(int j=0;j<4;j++){
 			printf("%x",state[j][i]);
 		}
@@ -226,27 +244,26 @@ void PrintState(uint8_t state[4][4]){
 	}
 }
 
-void Cipher(uint8_t in[4][4], uint8_t out[4][4], uint8_t expanded[(Nr+1)*4][4]){
-  uint8_t state[4][4];
-  memcpy(state,in,4*4);
+void Cipher(uint8_t in[4][4], uint8_t out[4][4], uint8_t expanded[(Nr+1)*Nb][4]){
+  uint8_t state[Nb][4];
+  memcpy(state,in,Nb*4);
   AddRoundKey(state,expanded,0);
 	for(int round=1;round<Nr;round++){
 		SubBytes(state);
 		ShiftRows(state);
 		MixColumns(state);
-		AddRoundKey(state,expanded,round*Nb);
+		AddRoundKey(state,expanded,round*4);
 	}
 	SubBytes(state);
 	ShiftRows(state);
 	AddRoundKey(state,expanded,Nr*Nb);
-	memcpy(out,state,4*4);
+	memcpy(out,state,Nb*4);
 }
 
-void InvCipher(uint8_t in[4][4], uint8_t out[4][4], uint8_t expanded[(Nr+1)*4][4]){
-  uint8_t state[4][4];
-  memcpy(state,in,4*4);
+void InvCipher(uint8_t in[4][4], uint8_t out[4][4], uint8_t expanded[(Nr+1)*Nb][4]){
+  uint8_t state[Nb][4];
+  memcpy(state,in,Nb*4);
   AddRoundKey(state,expanded,Nr*Nb);
-
 	for(int round=Nr;round>1;round--){
 		InvShiftRows(state);
 		InvSubBytes(state);
@@ -256,6 +273,7 @@ void InvCipher(uint8_t in[4][4], uint8_t out[4][4], uint8_t expanded[(Nr+1)*4][4
 	InvShiftRows(state);
 	InvSubBytes(state);
 	AddRoundKey(state,expanded,0);
+	memcpy(out,state,Nb*4);
 }
 
 int main(){
@@ -277,10 +295,7 @@ int main(){
   Cipher(in,out1,expanded);
 	InvCipher(out1,out2,expanded);
 
-  printf("[INPUT]:\n");
-	PrintState(in);
-	printf("[CIPHER]:\n");
-	PrintState(out1);
-	printf("[DECIPHER]:\n");
-	PrintState(out2);
+	PrintState(in,"----INPUT----");
+	PrintState(out1,"----CIPHER----");
+	PrintState(out2,"----DECIPHER----");
 }
