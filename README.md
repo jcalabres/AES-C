@@ -1,8 +1,8 @@
 # AES IMPLEMENTATION
 
-This repository contains an AES Implementation written in C with MASK countermeasure.
+This repository contains an AES Implementation wrote in C with MASK countermeasure.
 
-## Get started
+## Build
 
 Compile source code with gcc compiler:
 
@@ -23,3 +23,10 @@ Protects against common power analysis type attacks:
 * SPA
 * DPA
 * HODPA
+
+## Inspiration
+
+A project inspired by:
+
+* Announcing the ADVANCED ENCRYPTION STANDARD (AES).
+* An Implementation of DES and AES, Secure against Some Attacks.
