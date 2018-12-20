@@ -81,7 +81,7 @@ A project inspired by:
 ## Future work
 
 * Conversion of the implementation to an AES White-Box crypto implementation.
-* Rework functions to a best implement ones.
+* Rework functions to a best implemented ones.
 
 ## Authors
 
